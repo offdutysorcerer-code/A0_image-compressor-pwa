@@ -537,6 +537,42 @@ function escapeHtml(text) {
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+window.addEventListener("load", async () => {
+  const params = new URLSearchParams(location.search);
+  const sharedIds = params.get("shared");
+
+  if (!sharedIds) return;
+
+  const files = [];
+
+  for (const id of sharedIds.split(",")) {
+    try {
+      const imageRes = await fetch(`/shared-image/${id}`);
+      const metaRes = await fetch(`/shared-image-meta/${id}`);
+
+      if (!imageRes.ok || !metaRes.ok) continue;
+
+      const blob = await imageRes.blob();
+      const meta = await metaRes.json();
+
+      const file = new File([blob], meta.name, {
+        type: meta.type,
+        lastModified: meta.lastModified
+      });
+
+      files.push(file);
+    } catch (err) {
+      console.error("讀取分享圖片失敗", err);
+    }
+  }
+
+  if (files.length > 0) {
+    addFiles(files);
+    showStatus(`已從 Android 分享接收 ${files.length} 張圖片。`);
+    history.replaceState(null, "", "./");
+  }
+});
 </script>
 <script>
 if ('serviceWorker' in navigator) {

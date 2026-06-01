@@ -3,7 +3,6 @@
   "short_name": "圖片壓縮",
   "start_url": "./",
   "display": "standalone",
-
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -16,16 +15,17 @@
       "type": "image/png"
     }
   ],
-
   "share_target": {
-    "action": "/",
+    "action": "./?share-target=1",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
       "files": [
         {
           "name": "image",
-          "accept": ["image/*"]
+          "accept": [
+            "image/*"
+          ]
         }
       ]
     }
