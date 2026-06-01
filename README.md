@@ -1,14 +1,12 @@
 # A0 Image Compressor PWA
 
-純前端圖片壓縮工具
+線上網址：
+https://a0-image-compressor-pwa.pages.dev
 
 ## 功能
 
-- 圖片壓縮
+- JPG 壓縮
+- 多圖處理
 - Android PWA
-- Share Target
-- 離線使用
-
-## Demo
-
-https://a0-image-compressor-pwa.pages.dev
+- 相機拍照
+- 純前端運作
