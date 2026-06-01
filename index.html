@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>圖片 JPG 壓縮工具</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, "Microsoft JhengHei", sans-serif;
+    background: #f4f6f8;
+    color: #222;
+    font-size: 18px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+
+  h1 {
+    font-size: 28px;
+    margin: 0 0 16px;
+  }
+
+  .hint {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .drop-zone {
+    border: 3px dashed #aaa;
+    border-radius: 18px;
+    padding: 36px 20px;
+    text-align: center;
+    background: #fafafa;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 20px;
+  }
+
+  .drop-zone.dragover {
+    border-color: #0078d4;
+    background: #eef7ff;
+  }
+
+  .drop-zone strong {
+    display: block;
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  #cameraBtn {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
+
+  .control-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .control-row label {
+    font-weight: bold;
+  }
+
+  input[type="range"] {
+    width: 240px;
+  }
+
+  button {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 20px;
+    font-weight: bold;
+    background: #0078d4;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    background: #aaa !important;
+    cursor: not-allowed;
+  }
+
+  .status {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #eef7ff;
+    color: #17415f;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .file-list {
+    margin-top: 20px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .file-item {
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    padding: 12px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .file-item img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #eee;
+  }
+
+  .file-info {
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+
+  .download-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #0078d4;
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  @media (max-width: 600px) {
+    body {
+      font-size: 19px;
+    }
+
+    .page {
+      padding: 12px;
+    }
+
+    .card {
+      padding: 18px;
+      border-radius: 16px;
+    }
+
+    h1 {
+      font-size: 26px;
+    }
+
+    .drop-zone {
+      padding: 34px 14px;
+    }
+
+    .drop-zone strong {
+      font-size: 23px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .control-row {
+      display: block;
+    }
+
+    button {
+      font-size: 21px;
+      padding: 18px;
+    }
+
+    .file-item {
+      grid-template-columns: 80px 1fr;
+    }
+
+    .file-item img {
+      width: 80px;
+      height: 80px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <h1>圖片 JPG 壓縮工具</h1>
+    <div class="hint">
+      Windows 可拖曳多張圖片進來；Android 可點選選擇圖片。<br>
+      轉換後會下載為：原檔名_壓縮.jpg
+    </div>
+
+    <div id="dropZone" class="drop-zone">
+      <strong>拖曳圖片到這裡</strong>
+      或點這裡選擇圖片，可一次選多張
+    </div>
+
+    <button id="cameraBtn" type="button" style="margin-bottom:16px;background:#188038;">開啟相機拍照</button>
+
+    <input id="fileInput" type="file" accept="image/*" multiple />
+    <input id="cameraInput" type="file" accept="image/*" capture="environment" />
+
+    <div class="control-row">
+      <label for="quality">JPG 品質：</label>
+      <input id="quality" type="range" min="0.1" max="1" step="0.05" value="0.75" />
+      <span id="qualityText">0.75</span>
+    </div>
+
+    <button id="compressBtn" disabled>壓縮並下載</button>
+
+    <div id="status" class="status"></div>
+    <div id="fileList" class="file-list"></div>
+  </div>
+</div>
+
+<script>
+const fileInput = document.getElementById("fileInput");
+const cameraInput = document.getElementById("cameraInput");
+const cameraBtn = document.getElementById("cameraBtn");
+const dropZone = document.getElementById("dropZone");
+const qualityInput = document.getElementById("quality");
+const qualityText = document.getElementById("qualityText");
+const compressBtn = document.getElementById("compressBtn");
+const statusBox = document.getElementById("status");
+const fileList = document.getElementById("fileList");
+
+let selectedFiles = [];
+
+qualityInput.addEventListener("input", () => {
+  qualityText.textContent = qualityInput.value;
+});
+
+dropZone.addEventListener("click", () => {
+  fileInput.click();
+});
+
+fileInput.addEventListener("change", () => {
+  addFiles(fileInput.files);
+  fileInput.value = "";
+});
+
+cameraBtn.addEventListener("click", () => {
+  cameraInput.click();
+});
+
+cameraInput.addEventListener("change", async () => {
+  const photo = cameraInput.files[0];
+  cameraInput.value = "";
+
+  if (!photo) return;
+
+  await handleCameraPhoto(photo);
+});
+
+async function handleCameraPhoto(photo) {
+  if (!photo.type.startsWith("image/")) {
+    showStatus("相機回傳的檔案不是圖片。", true);
+    return;
+  }
+
+  const quality = parseFloat(qualityInput.value);
+
+  compressBtn.disabled = true;
+  cameraBtn.disabled = true;
+  fileList.innerHTML = "";
+  showStatus("照片壓縮中...");
+
+  try {
+    const result = await compressImageToJpg(photo, quality);
+    addResultItem(photo, result.blob, result.fileName, false);
+    triggerDownload(result.blob, result.fileName);
+    showStatus(`拍照壓縮完成！已下載：${result.fileName}`);
+  } catch (err) {
+    console.error(err);
+    showStatus("拍照後的圖片壓縮失敗。", true);
+  } finally {
+    compressBtn.disabled = selectedFiles.length === 0;
+    cameraBtn.disabled = false;
+  }
+}
+
+// Windows / 桌機拖曳多檔支援
+dropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+  addFiles(e.dataTransfer.files);
+});
+
+function addFiles(fileListObj) {
+  const imageFiles = Array.from(fileListObj).filter(file => file.type.startsWith("image/"));
+
+  if (imageFiles.length === 0) {
+    showStatus("沒有偵測到圖片檔。", true);
+    return;
+  }
+
+  selectedFiles = selectedFiles.concat(imageFiles);
+  renderFileList();
+  compressBtn.disabled = selectedFiles.length === 0;
+  showStatus(`已加入 ${imageFiles.length} 張圖片，目前共 ${selectedFiles.length} 張。`);
+}
+
+function renderFileList() {
+  fileList.innerHTML = "";
+
+  selectedFiles.forEach((file, index) => {
+    const item = document.createElement("div");
+    item.className = "file-item";
+
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+
+    const info = document.createElement("div");
+    info.className = "file-info";
+    info.innerHTML = `
+      <strong>${escapeHtml(file.name)}</strong><br>
+      原始大小：${formatBytes(file.size)}<br>
+      <button type="button" style="margin-top:8px;font-size:15px;padding:8px;width:auto;background:#666;" onclick="removeFile(${index})">移除</button>
+    `;
+
+    item.appendChild(img);
+    item.appendChild(info);
+    fileList.appendChild(item);
+  });
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  renderFileList();
+  compressBtn.disabled = selectedFiles.length === 0;
+  showStatus(`目前共 ${selectedFiles.length} 張圖片。`);
+}
+
+compressBtn.addEventListener("click", async () => {
+  if (selectedFiles.length === 0) {
+    showStatus("請先選擇圖片。", true);
+    return;
+  }
+
+  compressBtn.disabled = true;
+  fileList.innerHTML = "";
+
+  const quality = parseFloat(qualityInput.value);
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  let completed = 0;
+
+  showStatus("壓縮中...");
+
+  for (const file of selectedFiles) {
+    try {
+      const result = await compressImageToJpg(file, quality);
+      completed++;
+
+      // Android 對「一次觸發多個下載」支援不穩，改成產生下載按鈕讓使用者逐張點。
+      // Windows / 桌機則維持自動逐張下載。
+      addResultItem(file, result.blob, result.fileName, isMobile);
+
+      if (!isMobile) {
+        triggerDownload(result.blob, result.fileName);
+        await sleep(350);
+      }
+
+      showStatus(`已完成 ${completed} / ${selectedFiles.length}：${result.fileName}`);
+    } catch (err) {
+      console.error(err);
+      showStatus(`處理失敗：${file.name}`, true);
+    }
+  }
+
+  if (isMobile) {
+    showStatus(`完成！已產生 ${completed} 張壓縮 JPG。Android 請點每張圖片下方的「下載」按鈕逐張儲存。`);
+  } else {
+    showStatus(`完成！已自動下載 ${completed} 張壓縮 JPG。`);
+  }
+
+  compressBtn.disabled = false;
+});
+
+function compressImageToJpg(file, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      // 白底，避免 PNG 透明背景轉 JPG 後變黑
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        URL.revokeObjectURL(objectUrl);
+
+        if (!blob) {
+          reject(new Error("Canvas 轉換失敗"));
+          return;
+        }
+
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        const fileName = `${baseName}_壓縮.jpg`;
+
+        resolve({ blob, fileName });
+      }, "image/jpeg", quality);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("圖片載入失敗"));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+function triggerDownload(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 5000);
+}
+
+function addResultItem(originalFile, blob, fileName, mobileMode = false) {
+  const item = document.createElement("div");
+  item.className = "file-item";
+
+  const img = document.createElement("img");
+  const previewUrl = URL.createObjectURL(blob);
+  img.src = previewUrl;
+
+  const info = document.createElement("div");
+  info.className = "file-info";
+
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.className = "download-link";
+  link.href = downloadUrl;
+  link.download = fileName;
+  link.textContent = mobileMode ? `下載：${fileName}` : `再次下載：${fileName}`;
+
+  info.innerHTML = `
+    <strong>${escapeHtml(fileName)}</strong><br>
+    原始大小：${formatBytes(originalFile.size)}<br>
+    壓縮後：${formatBytes(blob.size)}<br>
+    壓縮率：約 ${Math.round((1 - blob.size / originalFile.size) * 100)}%
+  `;
+  info.appendChild(document.createElement("br"));
+  info.appendChild(link);
+
+  if (mobileMode) {
+    const note = document.createElement("div");
+    note.style.marginTop = "6px";
+    note.style.color = "#666";
+    note.style.fontSize = "0.9em";
+    note.textContent = "手機版請逐張點擊下載，較不容易被瀏覽器阻擋。";
+    info.appendChild(note);
+  }
+
+  item.appendChild(img);
+  item.appendChild(info);
+  fileList.appendChild(item);
+}
+
+function showStatus(message, isError = false) {
+  statusBox.style.display = "block";
+  statusBox.style.background = isError ? "#ffecec" : "#eef7ff";
+  statusBox.style.color = isError ? "#8a1f1f" : "#17415f";
+  statusBox.textContent = message;
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  const index = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, index)).toFixed(2)} ${units[index]}`;
+}
+
+function escapeHtml(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+</body>
+</html>
